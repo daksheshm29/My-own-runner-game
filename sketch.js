@@ -10,13 +10,12 @@ var obstaclesGroup, obstacle1, obstacle2, obstacle3, obstacle4;
 
 var score = 0;
 
-var gameOver, restart;
+var gameOver, restart,HighestScore;
 
-localStorage["HighestScore"] = 0;
 
 function preload(){
   Runner_running =   loadAnimation("Images/Runner1.png","Images/Runner3.png","Images/Runner4.png","Images/Runner5.png","Images/Runner6.png","Images/Runner7.png");
-  Runner_collided = loadAnimation("Images/Runner3.png");
+  Runner_collided = loadImage("Images/Runner3.png");
   
   groundImage = loadImage("Images/ground2.png");
   
@@ -26,55 +25,55 @@ function preload(){
   obstacle4 = loadImage("Images/obstacle4.png");
   
   
-  gameOverImg = loadImage("GAME OVER.png");
-  restartImg = loadImage("restart.png");
+  gameOverImg = loadImage("Images/GAME OVER.png");
+  restartImg = loadImage("Images/restartImg.png");
 }
 
 function setup() {
-  createCanvas(600, 200);
+  database=firebase.database();
+  createCanvas(displayWidth-30,displayHeight-100);
+
+  HighestScore=database.ref('HighestScore');
   
-  Runner = createSprite(50,180,20,50);
+  Runner = createSprite(displayWidth/2 +50,displayHeight-2000,20,50);
   
   Runner.addAnimation("running", Runner_running);
   Runner.addAnimation("collided", Runner_collided);
   Runner.scale = 0.5;
   
-  ground = createSprite(200,180,400,20);
-  ground.addImage("ground",groundImage);
-  ground.x = ground.width /2;
-  ground.velocityX = -(6 + 3*score/100);
+  ground = createSprite(displayWidth,displayHeight/2 + 40,displayWidth*400,20);
+  //ground.addImage("ground",groundImage);
+  ground.x = ground.width/2;
+  ground.velocityX = -3
   
-  //gameOver = createSprite(300,100);
-  //gameOver.addImage(gameOverImg);
+  gameOver = createSprite(displayWidth/2,displayHeight/2 -200);
+  gameOver.addImage(gameOverImg);
   
-  restart = createSprite(300,140);
+  restart = createSprite(displayWidth/2,displayWidth/2 -400);
   restart.addImage(restartImg);
   
-  gameOver.scale = 0.5;
-  restart.scale = 0.5;
+  gameOver.scale = 0.7;
+  restart.scale = 0.7;
 
   gameOver.visible = false;
   restart.visible = false;
   
-  invisibleGround = createSprite(200,190,400,10);
+  invisibleGround = createSprite(displayWidth,displayHeight/2 + 40,displayWidth*400,20);
   invisibleGround.visible = false;
   
   UpperObstaclesGroup = new Group();
   obstaclesGroup = new Group();
   
-  score = 0;
 }
 
 function draw() {
-  Runner.debug = false;
-  background(255,94,19);
+  background(253,94,83);
   text("Score: "+ score, 500,50);
-  
   if (gameState===PLAY){
     score = score + Math.round(getFrameRate()/60);
     ground.velocityX = -(6 + 3*score/100);
   
-    if(keyDown("space") && Runner.y >= 159) {
+    if(keyDown("space") ) {
       Runner.velocityY = -12;
     }
   
@@ -88,7 +87,7 @@ function draw() {
     spawnUpperObstacles();
     spawnObstacles();
   
-    if(obstaclesGroup.isTouching(Runner)){
+    if(obstaclesGroup.isTouching(Runner) || UpperObstaclesGroup.isTouching(Runner)){
         gameState = END;
     }
   }
@@ -121,12 +120,22 @@ function draw() {
 function spawnUpperObstacles() {
   //write code here to spawn the UpperObstacles
   if (frameCount % 60 === 0) {
-    var UpperObstacles = createSprite(600,120,40,10);
+    var UpperObstacles = createSprite(displayWidth,displayHeight,40,10);
     UpperObstacles.y = Math.round(random(80,120));
-    UpperObstacles.addImage(UpperObstaclesImage);
+    UpperObstacles.debug=false
+   // UpperObstacles.addImage(UpperObstaclesImage);
     UpperObstacles.scale = 0.5;
-    UpperObstacles.velocityX = -3;
+    UpperObstacles.velocityX = -(6 + 3*score/100);
     
+    var rand = Math.round(random(1,2));
+  switch(rand) {
+    case 1: UpperObstacles.addImage( obstacle1);
+            break;
+    case 2: UpperObstacles.addImage(obstacle3);
+            break;
+    default: break;
+  }
+  
      //assign lifetime to the variable
     UpperObstacles.lifetime = 200;
     
@@ -137,21 +146,13 @@ function spawnUpperObstacles() {
     //add each UpperObstacles to the group
     UpperObstaclesGroup.add(UpperObstacles);
   }
-  var rand = Math.round(random(1,2));
-  switch(rand) {
-    case 1: Upperobstacle.addImage(obstacle1);
-            break;
-    case 2: Upperobstacle.addImage(obstacle3);
-            break;
-    default: break;
-  }
-  
+ 
 }
 
 function spawnObstacles() {
   if(frameCount % 60 === 0) {
-    var obstacle = createSprite(600,165,10,40);
-    //obstacle.debug = true;
+    var obstacle = createSprite(displayWidth,460,10,40);
+    obstacle.debug = false;
     obstacle.velocityX = -(6 + 3*score/100);
     
     //generate random obstacles
@@ -182,11 +183,33 @@ function reset(){
   
   Runner.changeAnimation("running",Runner_running);
   
-  if(localStorage["HighestScore"]<score){
-    localStorage["HighestScore"] = score;
+  if(database.ref('HighestScore')<score){
+    HighestScore.updateHighestScore(score);
   }
-  console.log(localStorage["HighestScore"]);
+  score=0;
   
-  score = 0;
+}
+
+function updateHighestScore(HighestScore){
+  database.HighestScore=HighestScore;
+ }
+
+
+
+async function getBackgroundImg(){
+  var response = await fetch("http://worldtimeapi.org/api/timezone/Asia/Singapore");
+  var responseJSON = await response.json();
+
+  var datetime = responseJSON.datetime;
+  var hour = datetime.slice(11,13);
   
+  if(hour>=0600 && hour<=1900){
+      bg = "Images/Background.png";
+  }
+  else{
+      bg = "Images/Background2.png";
+  }
+
+  backgroundImg = loadImage(bg);
+  console.log(backgroundImg);
 }

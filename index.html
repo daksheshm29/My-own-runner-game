@@ -9,7 +9,34 @@
     <meta charset="utf-8" />
 
   </head>
+
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-database.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+<script>
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyCfAZp4tDezhdMlay9sH3LXR2rAnlAgMAk",
+    authDomain: "my-own-runner-game.firebaseapp.com",
+    databaseURL: "https://my-own-runner-game-default-rtdb.firebaseio.com",
+    projectId: "my-own-runner-game",
+    storageBucket: "my-own-runner-game.appspot.com",
+    messagingSenderId: "792422833748",
+    appId: "1:792422833748:web:cfdbf459d158d53d0f97c1"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+
+
   <body>
       <script src="sketch.js"></script>
+      <script src="Game.js"></script>
+      <script src="matter.js"></script>
   </body>
 </html>
